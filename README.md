@@ -3,4 +3,4 @@
  
  제가 지금까지 진행했던 프로젝트들을 보관해놓는 리포지토리입니다.
 
-[개인과제2_서희정_이력서.pdf](https://github.com/user-attachments/files/19280925/2_._.pdf)
+
