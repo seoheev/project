@@ -6,6 +6,7 @@ from collections import defaultdict
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from konlpy.tag import Okt
+from wordcloud import WordCloud  
 
 # 빅카인즈 API 설정
 API_KEY = "#기간만료#"
@@ -21,7 +22,7 @@ def load_stopwords(file_path="korean_stopwords.txt"):
             stopwords = set(f.read().splitlines())
         return stopwords
     except FileNotFoundError:
-        print("불용어 리스트 파일을 찾을 수 없습니다.")
+        print("파일을 찾을 수 없습니다.")
         return set()
 
 # 한국어 불용어 로드
@@ -94,13 +95,37 @@ def match_user_to_crops(df, user_info):
         (abs(user_info["labor_intensity"] - 5) * 10), axis=1)
     return df.sort_values(by="score", ascending=False)
 
-# 실행 코드
-news_df = collect_news_data()
-news_df = extract_farm_data(news_df)
-user_info = get_user_preferences()
-recommendations = match_user_to_crops(news_df, user_info)
 
-import ace_tools as tools
+from collections import Counter
 
-tools.display_dataframe_to_user(name="Personal Farm Recommendations", dataframe=recommendations)
+def generate_weighted_wordcloud(df):
+    # 가중치가 적용된 단어 빈도수를 저장할 Counter 생성
+    weighted_freq = Counter()
+    
+    for _, row in df.iterrows():
+        tokens = row["cleaned_content"].split()
+        # 조회수가 없는 키워드는 0으로 처리리
+        view_count = row["views"] if row["views"] else 0
+        # 단어 빈도 계산 후 조회수 가중치를 곱해서 누적
+        freq = Counter(tokens)
+        for word, count in freq.items():
+            weighted_freq[word] += count * view_count
+
+    font_path = "C:/Windows/Fonts/malgun.ttf"
+    
+    # 워드클라우드 생성
+    wordcloud = WordCloud(
+        font_path=font_path,
+        width=800,
+        height=400,
+        background_color="white"
+    ).generate_from_frequencies(weighted_freq)
+    
+    plt.figure(figsize=(15, 7.5))
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.title("요즘 농부들의 HOT ISSUE!", fontsize=20)
+    plt.show()
+
+generate_weighted_wordcloud(news_df)
 
